@@ -1,0 +1,30 @@
+{
+  "fromRepo": "integrations-platform-offline-product-catalog",
+  "fromCommit": "0000000000000000000000000000000000000000",
+  "toRef": "HEAD",
+  "ignoreCommitsIfMessageMatches": "^\\[maven-release-plugin\\].*|^\\[Gradle Release Plugin\\].*|^Merge.*",
+  "readableTagName": "/([^/]+?)$",
+  "dateFormat": "YYYY-MM-dd HH:mm:ss",
+  "untaggedName": "Next release",
+  "noIssueName": "Other changes",
+  "ignoreCommitsWithoutIssue": "false",
+  "timeZone": "UTC",
+  "removeIssueFromMessage": "true",
+  "gitLabServer": "https://gitlab.fftech.info/leonardo",
+  "gitLabToken": "replace.me.with.token",
+  "gitLabProjectName": "integrations-platform-offline-product-catalog",
+  "jiraServer": "https://farfetch.atlassian.net/browse/",
+  "jiraIssuePattern": "\\bINTT-([0-9]+)\\b",
+  "customIssues": [
+    {
+      "name": "Issues",
+      "pattern": "INTT-([0-9]+)",
+      "link": "https://farfetch.atlassian.net/browse/{pattern}"
+    },
+    {
+      "name": "Bugs",
+      "title": "Bugs",
+      "pattern": "#bug"
+    }
+  ]
+}

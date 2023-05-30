@@ -1,0 +1,42 @@
+<configuration scan="false">
+
+	<contextName>${service.prefix}</contextName>
+
+	<!-- load default properties -->
+	<property resource="log/default-logback.properties" />
+
+	<!-- localhost testing
+	<property name="FFLINK_LEVEL" value="DEBUG" />
+	-->
+
+	<!-- overridden properties -->
+	<property name="ELASTIC_SEARCH_URL" value="@camel.logs.elasticsearch.url@" />
+	<property name="SERVICE_NAME" value="${service.prefix}" />
+	<property name="SERVICE_VERSION" value="${version}" />
+	<property name="CONSOLE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} %X{X-B3-TraceId} %X{X-B3-SpanId} %replace([Event Id: %X{EVENT_ID}]){'(\\[.+?: \\])',''} %replace([Transaction: %X{TRANSACTION_ID}]){'(\\[.+?: \\])',''} %replace([LifeCycle Id: %X{LIFECYCLE_ID}]){'(\\[.+?: \\])',''} %-5p %C:%L - %m%n"/>
+	<property name="ROLLING_FILE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss} %X{X-B3-TraceId} %X{X-B3-SpanId} %replace([Event Id: %X{EVENT_ID}]){'(\\[.+?: \\])',''} %replace([Transaction: %X{TRANSACTION_ID}]){'(\\[.+?: \\])',''} %replace([LifeCycle Id: %X{LIFECYCLE_ID}]){'(\\[.+?: \\])',''} %-5p %C:%L - %m%n"/>
+
+	<property name="CONSOLE_APPENDER_ACTIVATION" value="${console.appender}" />
+	<property name="FILE_APPENDER_ACTIVATION" value="${file.appender}" />
+	<property name="JSON_APPENDER_ACTIVATION" value="${json.appender}" />
+	<property name="ELASTIC_APPENDER_ACTIVATION" value="${elastic.appender}" />
+	<property name="JSON_CONSOLE_APPENDER_ACTIVATION" value="${json.console.appender}" />
+
+	<!-- appenders -->
+	<include resource="log/console-appender.xml" />
+	<include resource="log/rolling-file-appender.xml" />
+	<include resource="log/elastic-search-appender.xml" />
+	<include resource="log/json-rolling-file-appender.xml" />
+	<include resource="log/json-console-appender.xml" />
+
+	<!-- loggers -->
+	<include resource="log/fflink-logger.xml" />
+	<include resource="log/aop-logger.xml" />
+	<include resource="log/persistence-logger.xml" />
+	<include resource="log/scheduler-logger.xml" />
+	<include resource="log/elastic-search-logger.xml" />
+
+	<!-- root appenders -->
+	<include resource="log/root-logger-appenders.xml" />
+
+</configuration>

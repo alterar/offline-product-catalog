@@ -1,0 +1,204 @@
+pipeline {
+    agent none
+
+    environment {
+        SETTINGS_GIT_REPO_FOLDER = "maven-settings"
+        SETTINGS_GIT_REPO = "https://gitlab.fftech.info/platforms-fflink/configurations.git"
+        ARTIFACTORY_DOCKER = "artifacts-we1.farfetch.net/farfetch-docker-stable-we1/farfetch"
+        FROM_REPO = "${ARTIFACTORY_DOCKER}/infrastructure-docker-maven"
+        FROM_TAG = "3.8-8"
+        FROM_PYTHON_REPO = "${ARTIFACTORY_DOCKER}/infrastructure-docker-python"
+        FROM_PYTHON_TAG = "2.7.17-focal"
+        FROM_SERVICE_REPO = "${ARTIFACTORY_DOCKER}/infrastructure-docker-openjdk-jdk"
+        FROM_SERVICE_TAG = "1.8"
+        SONAR_HOST_URL = 'https://sonarqube-we1.farfetch-corp.net/'
+        SONAR_LOGIN = "${env.SONAR_API_KEY}"
+        SONARQUBE_PROJECT_VERSION="${env.BRANCH_NAME}-${env.GIT_COMMIT}"
+        ARTIFACT_VERSION_TMP = ""
+        ARTIFACT_ID = ""
+        ARTIFACT_VERSION = ""
+        RELEASE_VERSION = ""
+        PROJECT_TYPE = ""
+        RELEASE_TAG_SUFFIX = ""
+        SERVICE_PORT = ""
+        ARTIFACT_TIMESTAMP = ""
+
+    }
+
+    stages {
+        stage('Init') {
+           steps {
+               CloneRepository("${SETTINGS_GIT_REPO}", "${SETTINGS_GIT_REPO_FOLDER}")
+               sh "mkdir .pipeline/scripts"
+               sh "mkdir -p deploy/Docker"
+               sh "cp -R maven-settings/.pipeline/declarative-base-files/scripts/* .pipeline/scripts"
+               sh "cp -R maven-settings/.pipeline/declarative-base-files/Makefile ."
+               sh "cp -R maven-settings/.pipeline/declarative-base-files/docker-compose.yaml ."
+               sh "cp maven-settings/.pipeline/declarative-base-files/Dockerfile deploy/Docker"
+               sh "make init"
+               sh "docker cp init-image:/home/ffuser/app ."
+               sh "cp app/blueprint.yaml ."
+               script {
+                  def ARTIFACT_ID = sh(returnStdout: true, script: 'cat app/artifact_id')
+                  def ARTIFACT_VERSION_TMP = sh(returnStdout: true, script: 'cat app/artifact_version')
+                  def ARTIFACT_TIMESTAMP = sh(returnStdout: true, script: 'cat app/artifact_timestamp')
+                  def RELEASE_TAG_SUFFIX = "${env.BRANCH_NAME}" == "master" ? "" : "-SNAPSHOT"
+                  def ARTIFACT_VERSION = "${ARTIFACT_VERSION_TMP}${RELEASE_TAG_SUFFIX}"
+                  def RELEASE_VERSION = "${ARTIFACT_ID}-${ARTIFACT_VERSION}"
+                  currentBuild.displayName = "# ${RELEASE_VERSION} | ${env.BRANCH_NAME}"
+                  currentBuild.description = "# ${env.BUILD_ID} | ${env.BRANCH_NAME}"
+                  DeploymentOptions.ignoreDeployJobResult(false)
+                  DeploymentOptions.disableDeployJob(true)
+                  Release.setReleaseVersion("${RELEASE_VERSION}")
+                  env.CUSTOM_AUTOMATIONS = sh(returnStdout: true, script: '[ -f app/custom_automations ] && echo -n true || echo -n false')
+               }
+           }
+        }
+
+        stage('Build') {
+            environment {
+                ARTIFACT_ID = """${sh(returnStdout: true, script: 'cat app/artifact_id')}"""
+                ARTIFACT_VERSION_TMP = """${sh(returnStdout: true, script: 'cat app/artifact_version')}"""
+                ARTIFACT_TIMESTAMP = """${sh(returnStdout: true, script: 'cat app/artifact_timestamp')}"""
+                PROJECT_TYPE = """${sh(returnStdout: true, script: 'cat app/artifact_type')}"""
+                PROJECT_PBN = """${sh(returnStdout: true, script: 'cat app/blueprint_pbn')}"""
+                RELEASE_TAG_SUFFIX = "${env.BRANCH_NAME == "master" ? "" : "-SNAPSHOT"}"
+                ARTIFACT_VERSION = "${ARTIFACT_VERSION_TMP}${RELEASE_TAG_SUFFIX}"
+                RELEASE_VERSION = "${ARTIFACT_ID}-${ARTIFACT_VERSION}"
+                MAVEN_PROFILE = "${env.BRANCH_NAME == "master" ? "RELEASE,PROD,CICDK8" : "QA,CICDK8"}"
+                SERVICE_PORT = """${sh(returnStdout: true, script: 'cat app/blueprint_service_port')}"""
+            }
+            steps {
+                script {
+                    if ("${PROJECT_TYPE}" == "library" && "${env.BRANCH_NAME}" ==~ /master|develop/) {
+                        Release.addArtifact(["type": "maven", "source": "${RELEASE_VERSION}", "sourceType": "jar"])
+                        sh "make build"
+                    } else if ("${PROJECT_TYPE}" == "library") {
+                        sh "make build"
+                    } else if ("${PROJECT_TYPE}" == "pom" && "${env.BRANCH_NAME}" ==~ /master|develop/) {
+                        Release.addArtifact(["type": "maven", "source": "pom.xml", "sourceType": "pom"])
+                        sh "make build"
+                    } else if ("${PROJECT_TYPE}" == "pom") {
+                        sh "make build"
+                    } else if ("${PROJECT_TYPE}" == "service" && "${env.BRANCH_NAME}" ==~ /master|develop/) {
+                        Release.addArtifact(["type": "docker", "source": "${PROJECT_PBN}:${ARTIFACT_VERSION_TMP}-${ARTIFACT_TIMESTAMP}"])
+                        Release.addArtifact(["type": "maven", "source": "${RELEASE_VERSION}", "sourceType": "jar"])
+                        sh "make build"
+                        sh "make build-service-properties"
+                        sh "make build-service"
+                    } else if ("${PROJECT_TYPE}" == "service") {
+                        sh "make build"
+                    } else {
+                        sh 'echo "Invalid project type: \"${PROJECT_TYPE}\""'
+                        sh "exit 1"
+                    }
+                }
+            }
+        }
+
+        stage("Test") {
+            environment {
+                ARTIFACT_ID = """${sh(returnStdout: true, script: 'cat app/artifact_id')}"""
+                ARTIFACT_VERSION_TMP = """${sh(returnStdout: true, script: 'cat app/artifact_version')}"""
+                PROJECT_TYPE = """${sh(returnStdout: true, script: 'cat app/artifact_type')}"""
+                PROJECT_PBN = """${sh(returnStdout: true, script: 'cat app/blueprint_pbn')}"""
+                RELEASE_TAG_SUFFIX = "${env.BRANCH_NAME == "master" ? "" : "-SNAPSHOT"}"
+                ARTIFACT_VERSION = "${ARTIFACT_VERSION_TMP}${RELEASE_TAG_SUFFIX}"
+                RELEASE_VERSION = "${ARTIFACT_ID}-${ARTIFACT_VERSION}"
+                MAVEN_PROFILE = "${env.BRANCH_NAME == "master" ? "RELEASE,PROD,CICDK8" : "QA,CICDK8"}"
+            }
+            steps {
+                script {
+                    if ("${PROJECT_TYPE}" ==~ /service|library/) {
+                       sh "make unit-tests"
+                       sh "docker cp unit-tests-image:/home/ffuser/app/target/surefire-reports ."
+                       junit 'surefire-reports/*.xml'
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube') {
+            environment {
+                ARTIFACT_VERSION_TMP = """${sh(returnStdout: true, script: 'cat app/artifact_version')}"""
+                RELEASE_TAG_SUFFIX = "${env.BRANCH_NAME == "master" ? "" : "-SNAPSHOT"}"
+                ARTIFACT_VERSION = "${ARTIFACT_VERSION_TMP}${RELEASE_TAG_SUFFIX}"
+                PROJECT_PBN = """${sh(returnStdout: true, script: 'cat app/blueprint_pbn')}"""
+                MAVEN_PROFILE = "${env.BRANCH_NAME == "master" ? "RELEASE,PROD,CICDK8" : "QA,CICDK8"}"
+            }
+            steps {
+                sh "make sonarqube"
+            }
+        }
+
+        stage("Package") {
+            environment {
+                ARTIFACT_ID = """${sh(returnStdout: true, script: 'cat app/artifact_id')}"""
+                ARTIFACT_VERSION_TMP = """${sh(returnStdout: true, script: 'cat app/artifact_version')}"""
+                PROJECT_TYPE = """${sh(returnStdout: true, script: 'cat app/artifact_type')}"""
+                PROJECT_PBN = """${sh(returnStdout: true, script: 'cat app/blueprint_pbn')}"""
+                RELEASE_TAG_SUFFIX = "${env.BRANCH_NAME == "master" ? "" : "-SNAPSHOT"}"
+                ARTIFACT_VERSION = "${ARTIFACT_VERSION_TMP}${RELEASE_TAG_SUFFIX}"
+                RELEASE_VERSION = "${ARTIFACT_ID}-${ARTIFACT_VERSION}"
+                MAVEN_PROFILE = "${env.BRANCH_NAME == "master" ? "RELEASE,PROD,CICDK8" : "QA,CICDK8"}"
+            }
+            when {
+                expression {
+                    return "${env.BRANCH_NAME}" ==~ /master|develop/
+                }
+            }
+            steps {
+                sh "make packages"
+            }
+        }
+
+        stage('GitTag') {
+            environment {
+                ARTIFACT_ID = """${sh(returnStdout: true, script: 'cat app/artifact_id')}"""
+                ARTIFACT_VERSION_TMP = """${sh(returnStdout: true, script: 'cat app/artifact_version')}"""
+                PROJECT_TYPE = """${sh(returnStdout: true, script: 'cat app/artifact_type')}"""
+                PROJECT_PBN = """${sh(returnStdout: true, script: 'cat app/blueprint_pbn')}"""
+                RELEASE_TAG_SUFFIX = "${env.BRANCH_NAME == "master" ? "" : "-SNAPSHOT"}"
+                ARTIFACT_VERSION = "${ARTIFACT_VERSION_TMP}${RELEASE_TAG_SUFFIX}"
+                RELEASE_VERSION = "${ARTIFACT_ID}-${ARTIFACT_VERSION}"
+                MAVEN_PROFILE = "${env.BRANCH_NAME == "master" ? "RELEASE,PROD,CICDK8" : "QA,CICDK8"}"
+            }
+            when {
+                expression {
+                    return "${env.BRANCH_NAME}" ==~ /master/
+                }
+            }
+            steps {
+                script {
+                    CreateTag("${RELEASE_VERSION}")
+                }
+            }
+        }
+
+        stage("Manage JIRA and Confluence") {
+            when {
+                expression {
+                    return "${env.BRANCH_NAME}" ==~ /master/
+                }
+            }
+            steps {
+                sh "make jira-and-confluence"
+            }
+        }
+
+        stage("Custom Automations") {
+            when {
+                expression { return "${env.CUSTOM_AUTOMATIONS}" ==~ /true/ && "${env.BRANCH_NAME}" ==~ /master/ }
+            }
+            steps {
+                sh "make custom-automations"
+            }
+        }
+    }
+
+    post {
+        always {
+            sh "make clean"
+        }
+    }
+}

@@ -1,0 +1,23 @@
+logs/
+release.properties
+*.releaseBackup
+offline-product-catalog.yaml
+# Exclude IDE specific metadata files
+*.iml
+**/.iml
+/.metadata/
+**/.idea/
+**/.classpath
+**/.project
+**/.settings/
+**/.factorypath
+# Exclude Checkstyle plugin files
+*.checkstyle
+# Exclude all compiled files
+/target/
+# Exclude Changelog plugin files
+changelog/CHANGELOG_gitlab.md
+# Exclude Blackduck plugin files
+blackduck/*
+!blackduck/blackDuckHubProjectName.txt
+# This project was created using farfetch-fflink-camel-service boilerplate

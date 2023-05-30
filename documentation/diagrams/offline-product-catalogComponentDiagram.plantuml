@@ -1,0 +1,104 @@
+@startuml
+
+'Remove the background'
+'skinparam BackgroundColor transparent
+
+skinparam style strictuml
+skinparam defaultFontName Helvetica
+
+'Parameters to be used in Activity diagrams'
+skinparam ResponseMessageBelowArrow true
+skinparam SequenceGroupBodyBackgroundColor #FFFFFF90
+skinparam autonumber "<B>[00]"
+
+'Margins and paddings'
+skinparam nodesep 40
+skinparam ranksep 100
+
+'Lines'
+skinparam linetype ortho
+
+'Component'
+skinparam component {
+  ArrowMessageAlignment center
+  ArrowFontSize 11
+  ArrowFontColor Maroon
+
+  BackgroundColor<<RTPService>> Orange
+  FontStyle<<RTPService>> bold
+}
+
+
+'Orientation'
+top to bottom direction
+
+
+package partnerComponent as "Partner Namespace"{
+
+    component partnerService as "partner service"
+
+}
+
+package farfetchComponent as "Farfetch"{
+
+    package integrationsComponent as "Integrations"{
+
+        component events as "integrations-core-events"
+        url of events is [[https://gitlab.fftech.info/infrastructure/blueprints/blob/master/blueprints/integrations/core/events.yaml{{integrations-core-events}}]]
+
+        component eventdiscoveryboilerplate as "integrations-core-eventdiscoveryboilerplate"
+        url of events is [[https://gitlab.fftech.info/infrastructure/blueprints/blob/master/blueprints/integrations/core/eventdiscoveryboilerplate.yaml{{integrations-core-eventdiscoveryboilerplate}}]]
+
+        'Please add your service accordingly in here'
+        component serviceImplemented as "integrations-platform-offline-product-catalog" <<RTPService>>
+
+
+        package "Infrastructure"{
+            database redis as "integrations-infra-redisprv"
+            url of redis is [[https://gitlab.fftech.info/infrastructure/blueprints/blob/master/blueprints/integrations/infra/redisprv.yaml{{integrations-infra-redisprv}}]]
+            database postgresql as "integrations-infra-postgresql1"
+            url of redis is [[https://gitlab.fftech.info/infrastructure/blueprints/blob/master/blueprints/integrations/infra/postgresql1.yaml{{integrations-infra-postgresql1}}]]
+            database zookeeper as "integrations-shared-zookeeperfflink"
+            url of redis is [[https://gitlab.fftech.info/infrastructure/blueprints/blob/master/blueprints/integrations/infra/postgresql1.yaml{{integrations-infra-postgresql1}}]]
+        }
+
+    }
+
+    package "Platform (Public API)"{
+        component authbo as "auth-auth-authbo"
+        component auth as "auth-auth-auth"
+        component management as "commerce-core-management"
+        component commerce as "commerce-core-api"
+        component pricing as "commerce-pricing-api"
+        component kong as "loadbalancer-external-apigateway"
+        component documents as "commerce-documents-persistence"
+    }
+
+    package "Farfetch Corporate"{
+        cloud sftp as "Farfetch SFTP"
+    }
+
+}
+
+
+/'This linkage below is just a example on how we could reach one goal'/
+
+
+events ..> redis : TCP
+events ..> postgresql : TCP/TLS
+eventdiscoveryboilerplate ..> events : HTTPS
+
+events ..> serviceImplemented : HTTPS
+
+serviceImplemented ..> kong : HTTPS
+serviceImplemented ..> management : HTTPS
+serviceImplemented ..> partnerService : HTTPS
+
+
+
+'This line is to remove all the items that aren't linked'
+remove @unlinked
+
+'Please don't remove this, it will help us keep track of the template used for documentation
+right header FFLINK Template version 1.0.0
+@enduml

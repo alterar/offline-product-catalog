@@ -1,0 +1,41 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration, org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration # Disable DB
+
+# Service Configuration
+service:
+  prefix: '@service.prefix@'
+  platform: integrations
+  boundary: platform
+  name: offline-product-catalog
+  version: ${project.version}
+
+# Server Configuration
+server:
+  port: '@service.port@'
+
+# Logging Configuration
+logging:
+  config: '@log.properties.file.path@'
+
+
+
+# API Service Configuration
+api-service:
+  url: '@integrations-platform-offline-product-catalog.api-service.url@'
+
+
+
+# Framework Configuration
+framework:
+  modules:
+    event-service:
+      enabled: true
+  addons:
+    api-service:
+        enabled: true
+        config:
+          url: ${api-service.url}
+    farfetch:

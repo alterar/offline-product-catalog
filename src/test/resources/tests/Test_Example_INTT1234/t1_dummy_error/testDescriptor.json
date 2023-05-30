@@ -1,0 +1,57 @@
+{
+    "issue": "Test_Example_INTT1234",
+    "type": "CAMEL",
+    "request": {
+        "url": {
+            "protocol": "HTTP",
+            "host": "localhost",
+            "port": 1234,
+            "method": "POST",
+            "path": "/camel/"
+        },
+        "headers": {
+            "Custom-FFLink-Event-Canonical-Information": "",
+            "Custom-FFLink-Event-Canonical-Type": "v1.0",
+            "Custom-FFLink-Event-Id": "",
+            "Custom-FFLink-Event-Type-Name": "",
+            "Custom-FFLink-Parent-Event-Id": "",
+            "Custom-FFLink-Transaction-Id": "",
+            "Content-Type": "application/json"
+        }
+    },
+    "response": {
+        "headers": {
+            "Custom-FFLink-Process-Status": "",
+            "Custom-FFLink-Error-Code": "",
+            "Custom-FFLink-Error-Detail": ""
+        }
+    },
+    "expectations": [
+        {
+            "type": "CACHE",
+            "routeId": "getFromCacheRoute",
+            "properties": {
+                "cacheKey": "cacheValue"
+            }
+        },
+        {
+            "type": "HTTP",
+            "request": {
+                "url": {
+                    "method": "POST",
+                    "path": "/event"
+                },
+                "headers": {
+                    "Content-Type": "application/json"
+                }
+            },
+            "response": {
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "statusCode": 500,
+                "body": "{\"code\":\"\",\"message\":\"\"}"
+            }
+        }
+    ]
+}

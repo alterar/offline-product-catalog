@@ -1,0 +1,29 @@
+confluence:
+  component_releases_page_id:
+  component_versions_page_id: 3479863938
+  space_key: INT
+git:
+  blueprint: https://gitlab.fftech.info/infrastructure/blueprints/raw/master/blueprints/integrations/platform/offline-product-catalog.yaml
+  branches_to_be_updated:
+    - develop
+  next_version: 1.1.0
+  release_version: 1.0.0
+jira:
+  component_name: integrations-platform-offline-product-catalog
+  jira_current_status: Ready For Live
+  jira_next_status: Closed
+  next_version: integrations-platform-offline-product-catalog_1.1.0
+  next_version_release_date: ''
+  project_key: INTT
+  release_version: integrations-platform-offline-product-catalog_1.0.0
+release_config:
+  fields_to_update:
+    - jira.release_version
+    - jira.next_version
+    - git.release_version
+    - git.next_version
+  update_type: minor
+  version_auto_increment: true
+custom_automations:
+  - camel
+  - version_updater

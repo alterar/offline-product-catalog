@@ -1,0 +1,20 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+
+test-framework:
+  mock-server:
+    port: 1080
+
+
+
+# Framework Configuration
+framework:
+  modules:
+    event-service:
+      enabled: true
+      config:
+        url: http://localhost:1080
+        path: /event
+  addons:
+    farfetch:

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.farfetch.fflink</groupId>
+        <artifactId>fflink-services-camel</artifactId>
+        <version>2.7.0</version>
+    </parent>
+
+    <artifactId>integrations-platform-offline-product-catalog</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <scm>
+        <connection>scm:git:https://gitlab.fftech.info/leonardo.carvalho/offline-product-catalog</connection>
+        <developerConnection>scm:git:https://gitlab.fftech.info/leonardo.carvalho/offline-product-catalog</developerConnection>
+        <url>https://gitlab.fftech.info/leonardo.carvalho/offline-product-catalog</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <properties>
+        <!-- FFLink Camel Service Boilerplate version -->
+        <fflink.camel.service.boilerplate.version>2.8.0</fflink.camel.service.boilerplate.version>
+        <!-- FFLink Camel Addons Farfetch version -->
+        <fflink.camel.addons.farfetch.version>2.8.0</fflink.camel.addons.farfetch.version>
+        <!-- FFLink Camel API Service Addon version -->
+        <fflink.camel.api.service.addon.version>2.3.0</fflink.camel.api.service.addon.version>
+        <!-- FFLink Catalogue Exceptions version -->
+        <fflink.catalogue.exceptions.version>1.0.0</fflink.catalogue.exceptions.version>
+        <!-- FFLink Test Platform version -->
+        <fflink.test.platform.version>3.5.0</fflink.test.platform.version>
+        <!-- Prefix identification of this service -->
+        <service.prefix>integrations-platform-offline-product-catalog</service.prefix>
+        <!-- Port of this service -->
+        <service.port>1234</service.port>
+    </properties>
+
+    <dependencies>
+        <!-- FFLink Dependencies -->
+        <dependency>
+            <groupId>com.farfetch.fflink</groupId>
+            <artifactId>camel-service-boilerplate</artifactId>
+            <version>${fflink.camel.service.boilerplate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.farfetch.fflink</groupId>
+            <artifactId>fflink-camel-addons-farfetch</artifactId>
+            <version>${fflink.camel.addons.farfetch.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.farfetch.fflink</groupId>
+            <artifactId>fflink-camel-api-service-addon</artifactId>
+            <version>${fflink.camel.api.service.addon.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.farfetch.fflink</groupId>
+            <artifactId>fflink-catalogue-exceptions</artifactId>
+            <version>${fflink.catalogue.exceptions.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.farfetch.fflink</groupId>
+            <artifactId>test-platform</artifactId>
+            <version>${fflink.test.platform.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

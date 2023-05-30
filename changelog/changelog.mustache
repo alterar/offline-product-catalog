@@ -1,0 +1,23 @@
+# Offline-Product-Catalog Module Changelog
+
+Current Version: ${project.version}
+
+{{#tags}}
+
+ {{#issues}}
+ {{#hasIssue}}
+### {{issue.name}} [{{issue}} ](https://farfetch.atlassian.net/browse/{{issue}})
+ {{/hasIssue}}
+
+  {{#commits}}
+    {{{messageTitle}}}
+    {{#messageBodyItems}}
+    {{.}}
+    {{/messageBodyItems}}
+[{{authorName}} *{{commitTime}}*](https://gitlab.fftech.info/leonardo/commit/{{hash}})
+
+  {{/commits}}
+
+ {{/issues}}
+ <hr>
+{{/tags}}

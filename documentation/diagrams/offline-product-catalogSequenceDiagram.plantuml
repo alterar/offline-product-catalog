@@ -1,0 +1,58 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+'Diagram configurations
+'Remove the background'
+'skinparam BackgroundColor transparent
+
+skinparam style strictuml
+skinparam defaultFontName Helvetica
+
+'Parameters to be used in Sequence diagrams'
+autonumber
+skinparam ResponseMessageBelowArrow true
+skinparam SequenceGroupBodyBackgroundColor #FFFFFF90
+skinparam autonumber "<B>[00]"
+'This line is to remove all the items that aren't linked'
+hide unlinked
+skinparam ArrowFontSize 12
+skinparam participant {
+    BackgroundColor<<Service>> Orange
+    ParticipantFontStyle<<Service>> bold
+}
+
+'Title
+mainframe integrations-platform-offline-product-catalog - New Partner Event
+
+'Participants
+participant "integrations-core-eventdiscoveryboilerplate" as eventdiscoveryboilerplate
+participant "integrations-core-events" as events
+
+participant "**integrations-platform-offline-product-catalog**" as myservice <<Service>>
+
+participant "infrastructure-shared-zookeeperfflink" as zookeeperfflink
+database "integrations-infra-postgresql1" as postgresql
+database "integrations-infra-redisprv" as redisprv
+participant "auth-auth-authbo" as authbo
+participant "auth-auth-auth" as auth
+participant "commerce-core-management" as management
+participant "commerce-core-api" as coreapi
+participant "commerce-pricing-api" as pricing
+participant "loadbalancer-external-apigateway" as apigateway
+participant "commerce-documents-persistence" as docpersistence
+
+/'This linkage below is just an example on how we could reach one goal'/
+eventdiscoveryboilerplate -> events: Polling files in /tmp
+events -> myservice: NEW_PARTNER_TRANSFER_FILE_EVENT
+    alt flag == true
+        myservice -> postgresql: select all partners
+        myservice <- postgresql: partners
+    else otherwise
+        myservice -> redisprv: select all partners
+        myservice <- redisprv: partners
+    end
+events <- myservice: FC
+
+'Please don't remove this, it will help us keep track of the template used for documentation
+|||
+right header FFLINK Template version 1.0.0
+@enduml
